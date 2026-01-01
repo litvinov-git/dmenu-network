@@ -34,7 +34,7 @@ connect() {
 				rc=1
 			else
 				notify-send "Connecting..." -t 1800
-				nmcli device wifi connect "$ssid" password "$password"
+				nmcli --wait 5 device wifi connect "$ssid" password "$password"
 				rc=$?
 			fi
 		fi
