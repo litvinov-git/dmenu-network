@@ -19,7 +19,6 @@ connect() {
 		notify-send "Connecting..." -t 1800
 		nmcli connection up "$ssid"
 		rc=$?
-		#notify-send "$rc"
 	else
 		local security=$(nmcli -t -f SSID,SECURITY dev wifi list | awk -F: -v s="$ssid" '$1==s {print $2; exit}')
 
@@ -27,14 +26,13 @@ connect() {
 			notify-send "Connecting..." -t 1800
 			nmcli device wifi connect "$ssid"
 			rc=$?
-			#notify-send "$rc"
 		else
 			local password=$(printf "Cancel" | menu_pin)
 			if [[ "$password" == "Cancel"  || -z "$password" ]]; then
 				rc=1
 			else
 				notify-send "Connecting..." -t 1800
-				nmcli --wait 5 device wifi connect "$ssid" password "$password"
+				nmcli --wait 7 device wifi connect "$ssid" password "$password"
 				rc=$?
 			fi
 		fi
@@ -44,32 +42,69 @@ connect() {
 		notify-send "Connected:D" -t 1800
 		exit 0
 	elif (( $rc ==1 )); then
-		handle_selected $ssid
+		exit 0
 	else
 		notify-send "Failed(" -t 1800
 		handle_failed $ssid
 	fi
 }
 
+#Connect with no timeout
+connect_no_timeout() {
+	local ssid=$1
+	local rc
+	if nmcli -t -f NAME connection show | grep -Fxq "$ssid"; then
+		notify-send "Connecting..." -t 1800
+		nmcli connection up "$ssid"
+		rc=$?
+	else
+		local security=$(nmcli -t -f SSID,SECURITY dev wifi list | awk -F: -v s="$ssid" '$1==s {print $2; exit}')
+
+		if [[ -z "$security" ]]; then
+			notify-send "Connecting..." -t 1800
+			nmcli device wifi connect "$ssid"
+			rc=$?
+		else
+			local password=$(printf "Cancel" | menu_pin)
+			if [[ "$password" == "Cancel"  || -z "$password" ]]; then
+				rc=1
+			else
+				notify-send "Connecting..." -t 1800
+				nmcli device wifi connect "$ssid" password "$password"
+				rc=$?
+			fi
+		fi
+	fi
+	
+	if (( $rc == 0 )); then
+		notify-send "Connected:D" -t 1800
+		exit 0
+	elif (( $rc ==1 )); then
+		exit 0
+	else
+		notify-send "Failed(" -t 1800
+		handle_failed $ssid
+	fi
+}
 
 #If the chosen network is the active one
 handle_active() {
 	local ssid=$1
 	local selection=$(printf "Edit\nDisconnect\nForget" | menu "$ssid")
 	case $selection in
-		Edit) notify-send "TODO" -t 1800;;
+		Edit) nm-connection-editor -e "$(nmcli -t -f NAME,UUID connection show | grep "^$ssid:" | cut -d: -f2)";;
 		Disconnect) nmcli connection down "$ssid";;
 		Forget) nmcli connection delete "$ssid";;
 	esac
 }
 
-#If the chosen network is profiled (memorized) but not active
+#If the chosen network is profiled (saved) but not active
 handle_profiled() {
 	local ssid=$1
 	local selection=$(printf "Connect\nEdit\nForget" | menu "$ssid")
 	case $selection in
 		Connect) connect "$ssid";;
-		Edit) notify-send "TODO" -t 1800;;
+		Edit) nm-connection-editor -e "$(nmcli -t -f NAME,UUID connection show | grep "^$ssid:" | cut -d: -f2)";;
 		Forget) nmcli connection delete "$ssid";;
 	esac
 }
@@ -77,7 +112,7 @@ handle_profiled() {
 #Failed connection menu
 handle_failed() {
 	local ssid=$1
-	selection=$(printf "Retry\nForget\nExit" | menu "$ssid")
+	selection=$(printf "Retry\nForget\nRetry - no timeout\nExit" | menu "$ssid")
 	case $selection in
 		Retry)
 			connect "$ssid"
@@ -86,20 +121,31 @@ handle_failed() {
 			nmcli connection delete "$ssid"
 			handle_failed "$ssid"
 		;;
+		"Retry - no timeout")
+			connect_no_timeout "$ssid"
+		;;
 		Exit) exit 0;;
 	esac	
 }
 
 
-#If the chosen tenwork is not profiled
-handle_selected() {
+#If the chosen network is not profiled
+handle_new() {
 	local ssid=$1
-	local selection=$(printf "Connect\nEdit" | menu "$ssid")
-	
-	case $selection in
-		Connect) connect "$ssid";;
-		Edit) notify-send "TODO" -t 1800;;
-	esac
+	connect "$ssid"
+}
+
+#View save saved connections
+view_profiles() {
+	local profiles=$(nmcli -t -f NAME connection show | sed '/^$/d' | sort -u | grep -v "^lo$")
+	local selection=$(echo "$profiles" | menu "Saved connections")
+	if [ "$selection" = "$active" ]; then
+		handle_active "$active"
+	elif [[ -z "$selection" ]]; then
+		exit 0
+	else
+		handle_profiled "$selection"
+	fi
 }
 
 # MAIN
@@ -110,6 +156,9 @@ list=$(nmcli -t -f SSID dev wifi list --rescan no | sed '/^$/d' | sort -u)
 
 #Rescan available networks in the background
 nmcli device wifi rescan & disown
+
+#Add saved profiles option to the ,enu input
+list="--Saved connections"$'\n'"$list"
 
 #Add rescan option to the menu input
 list="--Rescan"$'\n'"$list"
@@ -138,17 +187,11 @@ elif [[ -z "$choice" ]]; then
 elif [ "$choice" = "--Rescan" ]; then
 	nmcli device wifi rescan
 	exec "$0"
+elif [ "$choice" = "--Saved connections" ]; then
+	view_profiles
 elif nmcli -t -f NAME connection show | grep -Fxq "$choice"; then
 	handle_profiled "$choice"
 else
-	handle_selected "$choice"
+	handle_new "$choice"
 fi
-
-	
-			
-
-#TODO
-#Signal indicators and icons
-#Editing configurations
-		
 	
