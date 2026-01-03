@@ -1,5 +1,5 @@
 # dmenu-network
-Fast, robust and feature rich WiFi configuration script for dmenu-compatible launchers like wofi/rofi/tofi/fuzzel.
+Fast, robust and feature rich WiFi configuration script for dmenu-compatible launchers like wofi/rofi/tofi/fuzzel. Option "edit" automatically redirects to the selected network in nm-connection-editor, internal editing is planned as well.
 ### Why not other scripts?
 Some of them are on Python (ewww...), some of them simply dont work, some of them behave weirdly or have interface logic that just doesnt work for me. Also, I enjoy the process of bash scripting)
 ### Installation
@@ -32,7 +32,8 @@ I personally use fuzzel in dmenu mode, which is what you can see on demo.
 ## Coming soon
 Around January 10-11 2026 I have a plane back to my uni, which is when I will implement new features:
 1. FULL configuration - all the functional of networkmanager you might need to configure eduroam, for example.
-2. Repo with my other dmenu scripts.
+2. Icons, a bit more works on the looks.
+3. Repo with my other dmenu scripts.
 
 ## What is next?
 What I want to have in the end of my dmenu scripting journey is an extensive collection of scripts nested into a single settings menu, that would allow to tweak any hyprland or a similar WM based ssytem in a matter of seconds. I dont use any shell, bar or widgets, so scripts are the main way for me to interact with my system.
