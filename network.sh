@@ -11,6 +11,58 @@ menu_pin() {
 
 # FUNCTIONS
 
+#Format a network entry properly, get the icon
+format_entry() {
+	local entry=$1
+	local formatted
+	local signal_level
+	local ssid
+	local icon
+	
+	signal_level="${entry##*:}"
+	if [ "$signal_level" -lt "85" ]; then
+		if [ "$signal_level" -lt "60" ]; then
+			if [ "$signal_level" -lt "25" ]; then
+				icon="󰤟"
+			else
+				icon="󰤢"
+			fi
+		else
+			icon="󰤥"
+		fi
+	elif [ "$signal_level" -gt "84" ]; then
+		icon="󰤨"
+	else
+		icon="󰤭"
+	fi
+	
+	ssid="${entry%:*}"
+	
+	if [[ -n "$ssid" ]]; then
+		formatted="$icon $ssid"
+	else
+		formatted=""
+	fi
+	
+	echo "$formatted"
+}
+
+#Convert a list from SSID:SIGNAL_LEVEL to SIGNAL_ICON SSID
+format_list() {
+	local initial_list=$1
+	local new_list=""
+	local formatted
+	readarray -t entries <<< "$initial_list"
+	for entry in "${entries[@]}"; do
+		formatted="$(format_entry "$entry")"
+		if [[ -n "$formatted" ]]; then
+			new_list="$new_list"$'\n'"$formatted"
+		fi
+	done
+	new_list="${new_list#$'\n'}"
+	echo "$new_list"
+}
+
 #Connect to a network
 connect() {
 	local ssid=$1
@@ -81,6 +133,7 @@ connect_no_timeout() {
 		exit 0
 	elif (( $rc ==1 )); then
 		exit 0
+		#handle_new $ssid
 	else
 		notify-send "Failed(" -t 1800
 		handle_failed $ssid
@@ -98,7 +151,7 @@ handle_active() {
 	esac
 }
 
-#If the chosen network is profiled (saved) but not active
+#If the chosen network is profiled (memorized) but not active
 handle_profiled() {
 	local ssid=$1
 	local selection=$(printf "Connect\nEdit\nForget" | menu "$ssid")
@@ -129,15 +182,16 @@ handle_failed() {
 }
 
 
-#If the chosen network is not profiled
+#If the chosen tenwork is not profiled
 handle_new() {
 	local ssid=$1
 	connect "$ssid"
 }
 
-#View save saved connections
+#View saved networks
 view_profiles() {
 	local profiles=$(nmcli -t -f NAME connection show | sed '/^$/d' | sort -u | grep -v "^lo$")
+	#profiles=$(form_list $profiles)
 	local selection=$(echo "$profiles" | menu "Saved connections")
 	if [ "$selection" = "$active" ]; then
 		handle_active "$active"
@@ -150,9 +204,11 @@ view_profiles() {
 
 # MAIN
 
-#Get list and current from cash
-active=$(nmcli -t -f ACTIVE,SSID dev wifi list --rescan no | grep '^yes' | cut -d: -f2)
-list=$(nmcli -t -f SSID dev wifi list --rescan no | sed '/^$/d' | sort -u)
+active="$(nmcli -t -f ACTIVE,SSID,SIGNAL dev wifi list --rescan no | grep '^yes')" #get active network from cash
+active=${active:4} #remove "yes:"
+active=$(format_entry "$active") #format the active network
+list=$(nmcli -t -f SSID,SIGNAL dev wifi list --rescan no) #get list from cash
+list=$(format_list "$list") #format the list
 
 #Rescan available networks in the background
 nmcli device wifi rescan & disown
@@ -181,7 +237,7 @@ choice=$(echo "$list" | menu "$prompt")
 
 #Hadnle choice
 if [ "$choice" = "> $active <" ]; then
-	handle_active "$active"
+	handle_active "${active:2}"
 elif [[ -z "$choice" ]]; then
 	exit 0
 elif [ "$choice" = "--Rescan" ]; then
@@ -189,9 +245,10 @@ elif [ "$choice" = "--Rescan" ]; then
 	exec "$0"
 elif [ "$choice" = "--Saved connections" ]; then
 	view_profiles
-elif nmcli -t -f NAME connection show | grep -Fxq "$choice"; then
-	handle_profiled "$choice"
+elif nmcli -t -f NAME connection show | grep -Fxq "${choice:2}"; then
+	handle_profiled "${choice:2}"
 else
-	handle_new "$choice"
+	handle_new "${choice:2}"
 fi
+		
 	
