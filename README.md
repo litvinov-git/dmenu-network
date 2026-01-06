@@ -1,9 +1,38 @@
+[Installation](#installation) | [Demo](#demo) | [Configuration](#configuration) | [What is next?](#what-is-next)
 # dmenu-network
 Fast, robust and feature rich WiFi configuration script for dmenu-compatible launchers like wofi/rofi/tofi/fuzzel. Option "edit" automatically redirects to the selected network in nm-connection-editor, internal editing is planned as well. Proper pin entry and signal icons.
 ### Why not other scripts?
 Some of them are on Python (ewww...), some of them simply dont work, some of them behave weirdly or have interface logic that just doesnt work for me. Also, I enjoy the process of bash scripting)
-### Installation
-Just copy paste the script wherever you want and bind it to some key combo in your WM.
+## Installation
+1. Make sure that you have a dmenu-compatible menu (wofi/rofi/tofi/fuzzel, bemenu, dmenu itself, etc), and nm-connection-editor:
+
+- Install a menu:
+```
+sudo pacman -S fuzzel #Arch
+sudo apt get fuzzel #Ubuntu
+```
+
+- Install nm-connection-editor (it is likely present by default in GNOME and KDE):
+	
+```
+sudo pacman -S nm-connection-editor
+sudo apt get network-manager-gnome
+```
+3. Download the script, make it executable (by default these commands will put it in ~/.local/bin):
+```
+cd ~/.local/bin/
+curl -o network.sh https://raw.githubusercontent.com/litvinov-git/dmenu-network/refs/heads/main/network.sh
+chmod +x ./network.sh
+```
+4. Configure it to use your menu (see [Configuration](#configuration)), default is fuzzel
+5. Make it accessible for yourself using:
+
+- A hotkey bind in your DE/WM (KDE, GNOME, hyprland, sway, etc.), check the documentation on the option you use
+
+- A desktop file
+
+**Note**: if you did everything like in this guide, your executable (shell command to launch the script) is /home/your-user/.local/bin/network.sh
+   
 ## Demo
 Pictures:
 ![](https://raw.githubusercontent.com/litvinov-git/dmenu-network/refs/heads/main/20260106-213513.png)
@@ -13,16 +42,16 @@ Pictures:
 ![](https://raw.githubusercontent.com/litvinov-git/dmenu-network/refs/heads/main/20260101-212853.png)
 
 ## Configuration
-This script supports all dmenu-compatible launchers, you can easily configure your launcher and its password entry mode in the beggining:
+This script supports all dmenu-compatible launchers, you can easily configure your launcher and its password entry mode in the beggining of the script:
 
 ```bash
 # CONFIGURATION
 menu() {
-	fuzzel --dmenu --placeholder="$1"
+	fuzzel --dmenu --placeholder="$1" #place the command to call your menu here, using the first argument ($1) as a placeholder or prompt
 }
 
 menu_pin() {
-	fuzzel --dmenu --password='*' --placeholder="Password"
+	fuzzel --dmenu --password='*' --placeholder="Password" #command to call your menu in the pin entry mode, but if you dont care you can use it in the regular mode
 }
 ```
 
