@@ -58,4 +58,4 @@ menu_pin() {
 I personally use fuzzel in dmenu mode, which is what you can see on demo.
 
 ## What is next?
-What I want to have in the end of my dmenu scripting journey is an extensive collection of scripts nested into a single settings menu, that would allow to tweak any hyprland or a similar WM based ssytem in a matter of seconds. I dont use any shell, bar or widgets, so scripts are the main way for me to interact with my system.
+What I want to have in the end of my dmenu scripting journey is an extensive collection of scripts nested into a single settings menu that would allow to tweak any hyprland or a similar WM based ssytem in a matter of seconds. I dont use any shell, bar or widgets, so scripts are the main way for me to interact with my system.
