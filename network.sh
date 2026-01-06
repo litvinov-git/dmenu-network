@@ -227,7 +227,7 @@ else
 	prompt="Connected:"
 	connected=true
 	list=$(echo "$list" | grep -v "$active")
-	list="> $active <"$'\n'"$list"
+	list="$active <"$'\n'"$list"
 fi
 
 
@@ -236,7 +236,7 @@ choice=$(echo "$list" | menu "$prompt")
 
 
 #Hadnle choice
-if [ "$choice" = "> $active <" ]; then
+if [ "$choice" = "$active <" ]; then
 	handle_active "${active:2}"
 elif [[ -z "$choice" ]]; then
 	exit 0
