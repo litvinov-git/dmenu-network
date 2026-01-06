@@ -1,0 +1,7 @@
+[Desktop Entry]
+Icon=preferences-system-network
+Exec=sh -c ~/.local/bin/network.sh
+Terminal=false
+Type=application
+Name=WiFi Menu
+Categories=GNOME;GTK;Settings;X-GNOME-NetworkSettings;X-GNOME-Utilities;
