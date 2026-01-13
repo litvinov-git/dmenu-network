@@ -1,6 +1,8 @@
 [Installation and configurataion](#installation-and-configuration) | [Demo](#demo) | [What is next?](#what-is-next)
 # dmenu-network
 Fast, robust and feature rich WiFi configuration script for dmenu-compatible launchers like wofi/rofi/tofi/fuzzel. Option "edit" automatically redirects to the selected network in nm-connection-editor, internal editing is planned as well. Proper pin entry and signal icons.
+
+Please note that nmcli is slow itself, which you will only notice when prompting a full rescan. This script might move to iwctl later.
 ### Why not other scripts?
 Some of them are on Python (ewww...), some of them simply dont work, some of them behave weirdly or have interface logic that just doesnt work for me. Also, I enjoy the process of bash scripting)
 ## Installation and configuration
